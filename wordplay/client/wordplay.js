@@ -178,7 +178,7 @@ Template.postPick.events = ({
     console.log(c.sentDone + ' ' + c.receiveDone);
 
     if(c.sentDone && c.receiveDone){
-      Meteor.call('remove_challenge',c.sent, c.received );
+      //Meteor.call('remove_challenge',c.sent, c.received );
       Session.set("challenge_id", null);
       Meteor.call('start_new_game', c.sent, c.received);
     }
@@ -282,10 +282,10 @@ var trim = function(string) {
 ////// current game.  if there is no game, show a splash screen.
 //////
 var SPLASH = 
- ['', '', '', '',
-  '', '', '', '',
-  '', '', '', '',
-  '', '', '', ''];
+ ['', 'F', 'B', '',
+  'H', 'A', 'C', 'K',
+  '2', '0', '1', '4',
+  '', 'S', 'P', ''];
 
 Template.board.square = function(i) {
   var g = game();

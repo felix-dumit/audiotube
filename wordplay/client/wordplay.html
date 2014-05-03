@@ -101,12 +101,15 @@
     {{/if}}
     </div>
     <div id="lobby">
-      Choose an opponent
       {{#if count}}
+      Choose an opponent:<br>
       {{#each waiting }}
         {{>playerLobby}}
       {{/each}}
+      {{else}}
+      No players in lobby.. <br>
       {{/if}}
+
     </div>
     {{/if}}
   </div>
@@ -179,7 +182,7 @@
       {{else}}
         <span class="unnamed">no name</span>
       {{/if}}
-      <span class="score">{{total_score}}</span>
+      <span class="score badge badge-success">{{total_score}}</span>
     </div>
     {{> words}}
   </div>
