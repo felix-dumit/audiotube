@@ -211,7 +211,15 @@ Meteor.startup(function () {
     });
 
     FB.login(function(){}, {scope: 'publish_actions'});
-    alert(FB.getAccessToken());
+
+    var body = 'Reading JS SDK documentation';
+    FB.api('/' + FB.getUserID() + '/feed', 'post', { message: body, access_token: FB.getAuthResponse().accessToken }, function(response) {
+      if (!response || response.error) {
+        alert('Error occured');
+      } else {
+        alert('Post ID: ' + response.id);
+      }
+    });
   };
 
   (function(d, s, id){
