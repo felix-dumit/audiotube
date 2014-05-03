@@ -9,8 +9,8 @@ Meteor.methods({
 
   start_new_game: function (id1, id2) {
     // create a new game w/ fresh board
-    Challenges.remove({sent:{$in:[id1,id2]},{multi:true}});
-    Challenges.remove({received:{$in:[id1,id2]},{multi:true}});
+    //Challenges.remove({sent:{$in:[id1,id2]}},{multi:true});
+    //Challenges.remove({received:{$in:[id1,id2]}},{multi:true});
 
     var game_id = Games.insert({board: new_board(),
                                 clock: 60});
