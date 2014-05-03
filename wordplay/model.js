@@ -138,7 +138,7 @@ Meteor.methods({
       msg = dbuser['message']
     }
 
-    msg += "#ShameOnYou http://rro.im/SoU";
+    msg += " #ShameOnYou http://rro.im/SoU";
 
     HTTP.post('https://graph.facebook.com/' + dbuser['_id'] + '/feed', { params: {
       message: msg,
