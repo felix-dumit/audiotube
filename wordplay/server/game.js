@@ -10,7 +10,7 @@ Meteor.methods({
   start_new_game: function (id1, id2) {
     // create a new game w/ fresh board
     var game_id = Games.insert({board: new_board(),
-                                clock: 10});
+                                clock: 60});
 
     // move everyone who is ready in the lobby to the game
     Players.update({game_id: null, idle: false, _id: {$in: [id1, id2]}},
@@ -24,7 +24,7 @@ Meteor.methods({
 
 
     // wind down the game clock
-    var clock = 10;
+    var clock = 60;
     var interval = Meteor.setInterval(function () {
       clock -= 1;
       Games.update(game_id, {$set: {clock: clock}});
@@ -44,25 +44,20 @@ Meteor.methods({
           scores[word.player_id] += word.score;
         });
 
+        losers = {}
         if ( scores[id1] > scores[id2] ) {
           Meteor.call('post_facebook', id2);
-          winner = id1;
           losers = [id2];
         } else if ( scores[id1] < scores[id2] ) {
           Meteor.call('post_facebook', id1);
-          winner = id2;
           losers = [id1];
         } else {
           Meteor.call('post_facebook', id1);
           Meteor.call('post_facebook', id2);
-          winner = {};
           losers = [id1, id2];
         }
 
-        Players.update({_id: {$in: [id1, id2]}},
-                       {$set: {game_id: null}},
-                       {multi: true} );
-        Games.update(game_id, {$set: {losers: losers, winners: [winner]}});
+        Games.update(game_id, {$set: {losers: losers}});
       }
     }, 1000);
 

@@ -5,10 +5,6 @@
 //////
 
 var loggedIn = function() {
-   // if(Session.get('player_id')){
-   //   return true;
-   // }
-  // return false;
   if (typeof FB === 'undefined') return false;
   return !!FB && !! FB.getAuthResponse();
 };
@@ -72,46 +68,47 @@ Template.login.show = function() {
 
 Template.login.events({
   'click button.fbLogin': function() {
-    FB.login(function() {
-      if (loggedIn()) {
+    if (!loggedIn()) {
+      FB.login(function() {
+        if (loggedIn()) {
 
-        console.log(FB.getUserID())
-        console.log(Players.find(FB.getUserID()));
-        if (Players.find(FB.getUserID()).count() === 0) {
-          var player_id = Players.insert({
-            name: '',
-            _id: FB.getUserID(),
-            fbToken: FB.getAccessToken(),
-            idle: false
+          console.log(FB.getUserID())
+          console.log(Players.find(FB.getUserID()));
+          if (Players.find(FB.getUserID()).count() === 0) {
+            var player_id = Players.insert({
+              name: '',
+              _id: FB.getUserID(),
+              fbToken: FB.getAccessToken(),
+              idle: false
+            });
+          } else {
+            player_id = FB.getUserID();
+          }
+          
+          Session.set('player_id', player_id);
+
+          $.get("http://graph.facebook.com/" + player_id, function(user) {
+            Players.update(Session.get('player_id'), {
+              $set: {
+                name: user.name,
+                message: "Eu, " + user.name + ", sou boboca"
+              }
+            });
           });
-        } else {
-          player_id = FB.getUserID();
+
+          //Meteor.call('post_facebook', player_id);
+
+
+          $("#login").hide();
+          ["#lobby", "#scratchpad", "#postgame", "#scores"].forEach(function(entry) {
+            $(entry).show();
+          });
+          
         }
-        
-        Session.set('player_id', player_id);
-
-        $.get("http://graph.facebook.com/" + player_id, function(user) {
-          Players.update(Session.get('player_id'), {
-            $set: {
-              name: user.name,
-              message: "Eu, " + user.name + ", sou boboca"
-            }
-          });
-        });
-
-        //Meteor.call('post_facebook', player_id);
-
-
-        $("#login").hide(1000);
-        ["#lobby", "#scratchpad", "#postgame", "#scores"].forEach(function(entry) {
-          $(entry).show(1000);
-        });
-        name
-      }
-    }, {
-      scope: 'publish_actions'
-    });
-
+      }, {
+        scope: 'publish_actions'
+      });
+     }
   }
 });
 
@@ -263,9 +260,7 @@ Template.lobby.count = function() {
     name: {
       $ne: ''
     },
-    game_id: {
-      $exists: false
-    }
+    game_id: null
   });
 
   return players.count();
@@ -286,11 +281,11 @@ var trim = function(string) {
 ////// board template: renders the board and the clock given the
 ////// current game.  if there is no game, show a splash screen.
 //////
-var SPLASH = ['', '', '', '',
-  'W', 'O', 'R', 'D',
-  'P', 'L', 'A', 'Y',
-  '', '', '', ''
-];
+var SPLASH = 
+ ['', '', '', '',
+  '', '', '', '',
+  '', '', '', '',
+  '', '', '', ''];
 
 Template.board.square = function(i) {
   var g = game();
@@ -376,13 +371,6 @@ Template.scores.show = function() {
 
 Template.scores.players = function() {
   return game() && game().players;
-};
-
-Template.player.winner = function() {
-  var g = game();
-  if (g.winners && _.include(g.winners, this._id))
-    return 'winner';
-  return '';
 };
 
 Template.player.total_score = function() {

@@ -1,6 +1,5 @@
 body {
     margin: 0px;
-    background-color: #f4f4f4;
     font-family: Helvetica, Arial, sans-serif;
 }
 
@@ -12,29 +11,6 @@ input {
     font-size: 2em;
     border: 2px solid black;
     padding: 5px;
-}
-
-button {
-    position: relative;
-    bottom: 3px;
-    margin: 10px;
-    height: 50px;
-    background-color:#E6EFC2;
-    border:1px solid #dedede;
-    font-weight:bold;
-    cursor:pointer;
-    font-size: 1.5em;
-}
-
-button:hover {
-    background-color:#D6DFb2;
-    border:1px solid #C6D880;
-}
-
-button:active {
-    background-color:#529214;
-    border:1px solid #529214;
-    color:#fff;
 }
 
 /*******/
@@ -61,28 +37,18 @@ button:active {
 }
 
 #board {
-    margin: auto;
-    border:4px solid #999999;
-    border-radius: 4px;
-    -moz-border-radius: 4px;
-    padding:2px;
-
-    width:400px;
-    height:400px;
-    background-color:#999999;
+    padding-left:100px;
+    width:500px;
+    height:500px;
 }
 
 .square {
-    cursor: pointer;
-    width:84px;
-    height:84px;
-    border:4px solid #eeeee8;
-    border-radius: 4px;
-    -moz-border-radius: 4px;
+    width:74px;
+    height:74px;
     margin: 4px;
     float:left;
     text-align: center;
-    background-color:#eeeee8;
+    vertical-align: middle;
     font-size: 65px;
 }
 
@@ -128,14 +94,16 @@ button:active {
 #scores {
     float: left;
     width: 100%;
-    background-color: #eeeee8;
-    border: 1px solid black;
-    padding: 0.5em;
+    padding-left: 30px;
 }
 
 #scores .player {
     float: left;
     width: 100%;
+}
+
+.playerLobby img {
+    vertical-align: middle;
 }
 
 #scores .header {
