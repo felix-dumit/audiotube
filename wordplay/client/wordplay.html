@@ -12,12 +12,23 @@
       {{> board }}
     </div>
     <div id="right">
+      {{> login}}
       {{> lobby }}
       {{> scratchpad }}
       {{> postgame }}
       {{> scores }}
     </div>
   </div>
+</template>
+
+<template name="login">
+  {{#if show }}
+    <div id="login">
+      <button id="fbLogin" class="fbLogin">
+        Login with Facebook
+      </button>
+    </div>
+  {{/if}}
 </template>
 
 <template name="board">
@@ -56,19 +67,12 @@
   <div>
     {{#if show }}
     <div id="lobby">
-      <h1>What's your name?</h1>
-      <input id="myname" type="text" />
+      Choose an opponent
       {{#if count}}
-      <h1>{{count}} other players are in the lobby:</h1>
       {{#each waiting }}
-      <div class="player">{{name}}</div>
+      <div class="player"><button id="chall{{_id}}">{{name}}</button></div>
       {{/each}}
       {{/if}}
-      <div>
-        <button id="startgame" class="startgame" {{disabled}}>
-          {{#if count}} It's on! {{else}} Play solo {{/if}}
-        </button>
-      </div>
     </div>
     {{/if}}
   </div>

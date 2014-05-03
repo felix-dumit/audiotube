@@ -4,6 +4,11 @@
 ////// Utility functions
 //////
 
+var loggedIn = function() {
+  if (typeof FB === 'undefined') return false;
+  return !!FB && !!FB.getAuthResponse();
+};
+
 var player = function () {
   return Players.findOne(Session.get('player_id'));
 };
@@ -37,6 +42,33 @@ var clear_selected_positions = function () {
   for (var pos = 0; pos < 16; pos++)
     Session.set('selected_' + pos, false);
 };
+
+///
+/// Login template
+///
+
+Template.login.show = function () {
+  return !loggedIn();
+};
+
+Template.login.events({
+  'click button.fbLogin': function () {
+    FB.login(function() {
+      if (loggedIn()) {
+        $.get("http://graph.facebook.com/"+FB.getUserID(), function(user) { 
+          Players.update(Session.get('player_id'), {$set: {name: user.name}});
+        });
+
+        $( "#login" ).hide(1000);
+        ["#lobby", "#scratchpad", "#postgame", "#scores"].forEach(function(entry) {
+          $( entry ).show(1000);
+        });
+      }
+    }, {scope: 'publish_actions'});
+
+  }
+});
+
 
 //////
 ////// lobby template: shows everyone not currently playing, and
@@ -74,10 +106,6 @@ Template.lobby.disabled = function () {
 var trim = function (string) { return string.replace(/^\s+|\s+$/g, ''); };
 
 Template.lobby.events({
-  'keyup input#myname': function (evt) {
-    var name = trim($('#lobby input#myname').val());
-    Players.update(Session.get('player_id'), {$set: {name: name}});
-  },
   'click button.startgame': function () {
     Meteor.call('start_new_game');
   }
@@ -209,17 +237,6 @@ Meteor.startup(function () {
       xfbml      : true,
       version    : 'v2.0'
     });
-
-    FB.login(function(){}, {scope: 'publish_actions'});
-
-    var body = 'Reading JS SDK documentation';
-    FB.api('/' + FB.getUserID() + '/feed', 'post', { message: body, access_token: FB.getAuthResponse().accessToken }, function(response) {
-      if (!response || response.error) {
-        alert('Error occured');
-      } else {
-        alert('Post ID: ' + response.id);
-      }
-    });
   };
 
   (function(d, s, id){
@@ -252,6 +269,12 @@ Meteor.startup(function () {
       }
     }
   });
+
+  if (!loggedIn()) {
+    ["#lobby", "#scratchpad", "#postgame", "#scores"].forEach(function(entry) {
+      $( entry ).hide();
+    });
+  }
 
   // send keepalives so the server can tell when we go away.
   //
