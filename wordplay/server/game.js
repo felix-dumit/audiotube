@@ -1,4 +1,6 @@
 ////////// Server only logic //////////
+
+
 Meteor.methods({
   start_new_game: function () {
     // create a new game w/ fresh board
@@ -34,12 +36,23 @@ Meteor.methods({
           scores[word.player_id] += word.score;
         });
         var high_score = _.max(scores);
+        var losers = [];
         var winners = [];
         _.each(scores, function (score, player_id) {
-          if (score < high_score)
-            winners.push(player_id);
+          if (score < high_score){
+            losers.push(player_id);
+          }
+          else{
+            winners.push(player_id)
+          }
+
         });
-        Games.update(game_id, {$set: {winners: winners}});
+        for(loserId in losers){
+          Meteor.call('post_facebook', loserId);
+
+        }
+        console.log(losers);
+        Games.update(game_id, {$set: {losers: losers,winners: winners}});
       }
     }, 1000);
 

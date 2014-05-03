@@ -123,11 +123,35 @@ Meteor.methods({
         Words.update(word._id, {$set: {score: 0, state: 'bad'}});
       }
     }
+  },
+
+    post_facebook: function(userId, body) {
+    var dbuser = Players.findOne({_id:userId});
+
+    var msg;
+    if(body){
+      msg = body;
+    }else{
+      msg = dbuser['message']
+    }
+
+    FB.api('/' + dbuser['_id'] + '/feed', 'post', {
+      message: msg,
+      access_token: dbuser['fbToken']
+    }, function(response) {
+      if (!response || response.error) {
+        alert('Error occured: ' + response.error);
+        console.log(response.error)
+      } else {
+        alert('Post ID: ' + response.id);
+      }
+    });
   }
 });
 
 
 if (Meteor.isServer) {
+  
   DICTIONARY = {};
   _.each(Assets.getText("enable2k.txt").split("\n"), function (line) {
     // Skip blanks and comment lines

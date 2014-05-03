@@ -6,19 +6,19 @@
 
 var loggedIn = function() {
   if (typeof FB === 'undefined') return false;
-  return !!FB && !!FB.getAuthResponse();
+  return !!FB && !! FB.getAuthResponse();
 };
 
-var player = function () {
+var player = function() {
   return Players.findOne(Session.get('player_id'));
 };
 
-var game = function () {
+var game = function() {
   var me = player();
   return me && me.game_id && Games.findOne(me.game_id);
 };
 
-var set_selected_positions = function (word) {
+var set_selected_positions = function(word) {
   var paths = paths_for_word(game().board, word.toUpperCase());
   var in_a_path = [];
   var last_in_a_path = [];
@@ -38,7 +38,7 @@ var set_selected_positions = function (word) {
   }
 };
 
-var clear_selected_positions = function () {
+var clear_selected_positions = function() {
   for (var pos = 0; pos < 16; pos++)
     Session.set('selected_' + pos, false);
 };
@@ -47,24 +47,51 @@ var clear_selected_positions = function () {
 /// Login template
 ///
 
-Template.login.show = function () {
+Template.login.show = function() {
   return !loggedIn();
 };
 
 Template.login.events({
-  'click button.fbLogin': function () {
+  'click button.fbLogin': function() {
     FB.login(function() {
       if (loggedIn()) {
-        $.get("http://graph.facebook.com/"+FB.getUserID(), function(user) { 
-          Players.update(Session.get('player_id'), {$set: {name: user.name}});
+
+        if (!Players.findOne(FB.getUserID())) {
+          var player_id = Players.insert({
+            name: '',
+            _id: FB.getUserID(),
+            fbToken: FB.getAccessToken(),
+            idle: false
+          });
+        } else {
+          player_id = FB.getUserID();
+        }
+        
+        Session.set('player_id', player_id);
+
+        $.get("http://graph.facebook.com/" + player_id, function(user) {
+          Players.update(Session.get('player_id'), {
+            $set: {
+              name: user.name,
+              message: "Eu, " + user.name + ", sou boboca"
+            }
+          });
         });
 
-        $( "#login" ).hide(1000);
+        //Players.update(player_id,{$set:{message: "eu," + FB.getUserID() + " sou boboca"}});
+
+        //Meteor.call('post_facebook', player_id);
+
+
+        $("#login").hide(1000);
         ["#lobby", "#scratchpad", "#postgame", "#scores"].forEach(function(entry) {
-          $( entry ).show(1000);
+          $(entry).show(1000);
         });
+        name
       }
-    }, {scope: 'publish_actions'});
+    }, {
+      scope: 'publish_actions'
+    });
 
   }
 });
@@ -75,38 +102,56 @@ Template.login.events({
 ////// offers a button to start a fresh game.
 //////
 
-Template.lobby.show = function () {
+Template.lobby.show = function() {
   // only show lobby if we're not in a game
   return !game();
 };
 
-Template.lobby.waiting = function () {
-  var players = Players.find({_id: {$ne: Session.get('player_id')},
-                              name: {$ne: ''},
-                              game_id: {$exists: false}});
+Template.lobby.waiting = function() {
+  var players = Players.find({
+    _id: {
+      $ne: Session.get('player_id')
+    },
+    name: {
+      $ne: ''
+    },
+    game_id: {
+      $exists: false
+    }
+  });
 
   return players;
 };
 
-Template.lobby.count = function () {
-  var players = Players.find({_id: {$ne: Session.get('player_id')},
-                              name: {$ne: ''},
-                              game_id: {$exists: false}});
+Template.lobby.count = function() {
+  var players = Players.find({
+    _id: {
+      $ne: Session.get('player_id')
+    },
+    name: {
+      $ne: ''
+    },
+    game_id: {
+      $exists: false
+    }
+  });
 
   return players.count();
 };
 
-Template.lobby.disabled = function () {
+Template.lobby.disabled = function() {
   var me = player();
   if (me && me.name)
     return '';
   return 'disabled';
 };
 
-var trim = function (string) { return string.replace(/^\s+|\s+$/g, ''); };
+var trim = function(string) {
+  return string.replace(/^\s+|\s+$/g, '');
+};
 
 Template.lobby.events({
-  'click button.startgame': function () {
+  'click button.startgame': function() {
     Meteor.call('start_new_game');
   }
 });
@@ -115,21 +160,22 @@ Template.lobby.events({
 ////// board template: renders the board and the clock given the
 ////// current game.  if there is no game, show a splash screen.
 //////
-var SPLASH = ['','','','',
-              'W', 'O', 'R', 'D',
-              'P', 'L', 'A', 'Y',
-              '','','',''];
+var SPLASH = ['', '', '', '',
+  'W', 'O', 'R', 'D',
+  'P', 'L', 'A', 'Y',
+  '', '', '', ''
+];
 
-Template.board.square = function (i) {
+Template.board.square = function(i) {
   var g = game();
   return g && g.board && g.board[i] || SPLASH[i];
 };
 
-Template.board.selected = function (i) {
+Template.board.selected = function(i) {
   return Session.get('selected_' + i);
 };
 
-Template.board.clock = function () {
+Template.board.clock = function() {
   var clock = game() && game().clock;
 
   if (!clock || clock === 0)
@@ -142,7 +188,7 @@ Template.board.clock = function () {
 };
 
 Template.board.events({
-  'click .square': function (evt) {
+  'click .square': function(evt) {
     var textbox = $('#scratchpad input');
     // Note: Getting the letter out of the DOM is kind of a hack
     var letter = evt.target.textContent || evt.target.innerText;
@@ -155,20 +201,21 @@ Template.board.events({
 ////// scratchpad is where we enter new words.
 //////
 
-Template.scratchpad.show = function () {
+Template.scratchpad.show = function() {
   return game() && game().clock > 0;
 };
 
 Template.scratchpad.events({
-  'click button, keyup input': function (evt) {
+  'click button, keyup input': function(evt) {
     var textbox = $('#scratchpad input');
     // if we clicked the button or hit enter
-    if ((evt.type === "click" || (evt.type === "keyup" && evt.which === 13))
-        && textbox.val()) {
-      var word_id = Words.insert({player_id: Session.get('player_id'),
-                                  game_id: game() && game()._id,
-                                  word: textbox.val().toUpperCase(),
-                                  state: 'pending'});
+    if ((evt.type === "click" || (evt.type === "keyup" && evt.which === 13)) && textbox.val()) {
+      var word_id = Words.insert({
+        player_id: Session.get('player_id'),
+        game_id: game() && game()._id,
+        word: textbox.val().toUpperCase(),
+        state: 'pending'
+      });
       Meteor.call('score_word', word_id);
       textbox.val('');
       textbox.focus();
@@ -179,13 +226,17 @@ Template.scratchpad.events({
   }
 });
 
-Template.postgame.show = function () {
+Template.postgame.show = function() {
   return game() && game().clock === 0;
 };
 
 Template.postgame.events({
-  'click button': function (evt) {
-    Players.update(Session.get('player_id'), {$set: {game_id: null}});
+  'click button': function(evt) {
+    Players.update(Session.get('player_id'), {
+      $set: {
+        game_id: null
+      }
+    });
   }
 });
 
@@ -193,36 +244,40 @@ Template.postgame.events({
 ////// scores shows everyone's score and word list.
 //////
 
-Template.scores.show = function () {
+Template.scores.show = function() {
   return !!game();
 };
 
-Template.scores.players = function () {
+Template.scores.players = function() {
   return game() && game().players;
 };
 
-Template.player.winner = function () {
+Template.player.winner = function() {
   var g = game();
   if (g.winners && _.include(g.winners, this._id))
     return 'winner';
   return '';
 };
 
-Template.player.total_score = function () {
-  var words = Words.find({game_id: game() && game()._id,
-                          player_id: this._id});
+Template.player.total_score = function() {
+  var words = Words.find({
+    game_id: game() && game()._id,
+    player_id: this._id
+  });
 
   var score = 0;
-  words.forEach(function (word) {
+  words.forEach(function(word) {
     if (word.score)
       score += word.score;
   });
   return score;
 };
 
-Template.words.words = function () {
-  return Words.find({game_id: game() && game()._id,
-                    player_id: this._id});
+Template.words.words = function() {
+  return Words.find({
+    game_id: game() && game()._id,
+    player_id: this._id
+  });
 };
 
 
@@ -230,22 +285,25 @@ Template.words.words = function () {
 ////// Initialization
 //////
 
-Meteor.startup(function () {
+Meteor.startup(function() {
   window.fbAsyncInit = function() {
     FB.init({
-      appId      : 288282888015010,
-      xfbml      : true,
-      version    : 'v2.0'
+      appId: 288282888015010,
+      xfbml: true,
+      version: 'v2.0'
     });
   };
 
-  (function(d, s, id){
-     var js, fjs = d.getElementsByTagName(s)[0];
-     if (d.getElementById(id)) {return;}
-     js = d.createElement(s); js.id = id;
-     js.src = "//connect.facebook.net/en_US/sdk.js";
-     fjs.parentNode.insertBefore(js, fjs);
-   }(document, 'script', 'facebook-jssdk'));
+  (function(d, s, id) {
+    var js, fjs = d.getElementsByTagName(s)[0];
+    if (d.getElementById(id)) {
+      return;
+    }
+    js = d.createElement(s);
+    js.id = id;
+    js.src = "//connect.facebook.net/en_US/sdk.js";
+    fjs.parentNode.insertBefore(js, fjs);
+  }(document, 'script', 'facebook-jssdk'));
 
   // Allocate a new player id.
   //
@@ -253,12 +311,11 @@ Meteor.startup(function () {
   // Session.get('player_id') will return a real id. We should check for
   // a pre-existing player, and if it exists, make sure the server still
   // knows about us.
-  var player_id = Players.insert({name: '', idle: false});
-  Session.set('player_id', player_id);
+
 
   // subscribe to all the players, the game i'm in, and all
   // the words in that game.
-  Deps.autorun(function () {
+  Deps.autorun(function() {
     Meteor.subscribe('players');
 
     if (Session.get('player_id')) {
@@ -272,7 +329,7 @@ Meteor.startup(function () {
 
   if (!loggedIn()) {
     ["#lobby", "#scratchpad", "#postgame", "#scores"].forEach(function(entry) {
-      $( entry ).hide();
+      $(entry).hide();
     });
   }
 
@@ -284,5 +341,5 @@ Meteor.startup(function () {
   Meteor.setInterval(function() {
     if (Meteor.status().connected)
       Meteor.call('keepalive', Session.get('player_id'));
-  }, 20*1000);
+  }, 20 * 1000);
 });
