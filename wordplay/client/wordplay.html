@@ -1,5 +1,5 @@
 <head>
-  <title>Word play!</title>
+  <title>Shame on you!</title>
   <link href="bootstrap.min.css" rel="stylesheet">
   <link href="darkstrap.min.css" rel="stylesheet">
 </head>
@@ -87,24 +87,30 @@
     <div id="received_challenged">
     {{#if has_challenges}}
       Received Challenges:
+      <br/>
       {{#each challenger}}
         {{>receivedChallenge}}
+        <br/>
       {{/each}}
     {{/if}}
     </div>
     <div id="sent_challenges">
     {{#if has_sent_challenges}}
       Sent Challenges:
+      <br/>
       {{#each sent_challenger}}
         {{> sentChallenge}}
+        <br/>
       {{/each}}
     {{/if}}
     </div>
     <div id="lobby">
+      Choose an opponent
+      <br/>
       {{#if count}}
-      Choose an opponent:<br>
       {{#each waiting }}
         {{>playerLobby}}
+        <br/>
       {{/each}}
       {{else}}
       No players in lobby.. <br>
@@ -146,8 +152,10 @@
 <template name="scratchpad">
   {{#if show}}
   <div id="scratchpad">
-    <input id="scratchpad_input" type="text" />
-    <button name="submit" class="submit btn btn-inverse" type="button">Submit</button>
+    <div class="input-append"> 
+      <input id="scratchpad_input" class="span2" type="text" />
+      <button name="submit" class="submit btn btn-inverse" type="button">Submit</button>
+    </div>
   </div>
   {{/if}}
 </template>

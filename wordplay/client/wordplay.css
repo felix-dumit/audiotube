@@ -83,6 +83,10 @@ input {
     height: 100px;
 }
 
+#post input {
+    width: 70%;
+}
+
 #scratchpad input {
     width: 70%;
 }

@@ -20,7 +20,7 @@ var game = function() {
 
 var challenge = function(){
   pid = Session.get('player_id')
-  var c = Challenges.findOne({$or:[{sent:pid},{received:pid}], accepted:true, textdone:null});
+  var c = Challenges.findOne({$or:[{sent:pid},{received:pid}], accepted:true});
   if(c){
     Session.set('challenge_id', c._id);
   }
@@ -178,7 +178,7 @@ Template.postPick.events = ({
     console.log(c.sentDone + ' ' + c.receiveDone);
 
     if(c.sentDone && c.receiveDone){
-      //Meteor.call('remove_challenge',c.sent, c.received );
+      Meteor.call('remove_challenge',c.sent, c.received );
       Session.set("challenge_id", null);
       Meteor.call('start_new_game', c.sent, c.received);
     }
