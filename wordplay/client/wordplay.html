@@ -14,6 +14,7 @@
     <div id="right">
       {{> login}}
       {{> lobby }}
+      {{> postPick}}
       {{> scratchpad }}
       {{> postgame }}
       {{> scores }}
@@ -66,6 +67,22 @@
 <template name="lobby">
   <div>
     {{#if show }}
+    <div id="received_challenged">
+    {{#if has_challenges}}
+      Received Challenges:
+      {{#each challenger}}
+        {{>receivedChallenge}}
+      {{/each}}
+    {{/if}}
+    </div>
+    <div id="sent_challenges">
+    {{#if has_sent_challenges}}
+      Sent Challenges:
+      {{#each sent_challenger}}
+        {{> sentChallenge}}
+      {{/each}}
+    {{/if}}
+    </div>
     <div id="lobby">
       Choose an opponent
       {{#if count}}
@@ -78,10 +95,32 @@
   </div>
 </template>
 
+<template name="receivedChallenge">
+<div class="receivedChallenge">
+    <button id="{{_id}}">{{name}}</button>
+  </div>
+</template>
+
+<template name="sentChallenge">
+<div class="sentChallenge">
+    <button id="{{_id}}">{{name}}</button>
+  </div>
+</template>
+
 <template name="playerLobby">
   <div class="playerLobby">
     <button id="{{_id}}">{{name}}</button>
   </div>
+</template>
+
+<template name="postPick">
+  {{#if show}}
+  <div class="postPick">
+    Pick a text for your opponent to post if he loses:
+    <input id="post_input" type="text" />
+    <button name="submit" id="submitOpPost" class="submit">Submit</button>
+  </div>
+  {{/if}}
 </template>
 
 <template name="scratchpad">

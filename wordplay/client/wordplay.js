@@ -5,6 +5,10 @@
 //////
 
 var loggedIn = function() {
+   // if(Session.get('player_id')){
+   //   return true;
+   // }
+  // return false;
   if (typeof FB === 'undefined') return false;
   return !!FB && !! FB.getAuthResponse();
 };
@@ -16,7 +20,22 @@ var player = function() {
 var game = function() {
   var me = player();
   return me && me.game_id && Games.findOne(me.game_id);
-};
+};  
+
+var challenge = function(){
+  pid = Session.get('player_id')
+  var c = Challenges.findOne({$or:[{sent:pid},{received:pid}], accepted:true, textdone:null});
+  if(c){
+    Session.set('challenge_id', c._id);
+  }
+  return c;
+}
+
+var setPosts = function(){  
+  return Challenges.findOne({_id:Session.get('challenge_id'), accepted:true, sentDone:true, receiveDone:true});
+}
+
+
 
 var set_selected_positions = function(word) {
   var paths = paths_for_word(game().board, word.toUpperCase());
@@ -80,8 +99,6 @@ Template.login.events({
           });
         });
 
-        //Players.update(player_id,{$set:{message: "eu," + FB.getUserID() + " sou boboca"}});
-
         //Meteor.call('post_facebook', player_id);
 
 
@@ -98,34 +115,144 @@ Template.login.events({
   }
 });
 
+
+
+
+
 Template.playerLobby.events({
   'click button': function(e) {
-    Meteor.call('start_new_game', e.currentTarget.id, Session.get('player_id'));
+    Challenges.insert({sent:Session.get('player_id'), received:e.currentTarget.id, accepted:false});
+    console.log('im here');
+    //Meteor.call('start_new_game', e.currentTarget.id, Session.get('player_id'));
+  }
+
+});
+
+
+Template.receivedChallenge.events({
+  'click button': function(e){
+      Meteor.call('remove_challenge',e.currentTarget.id, Session.get('player_id') );
+      Challenges.insert({sent:e.currentTarget.id, received:Session.get('player_id'), accepted:true});
+
+      //Meteor.call('start_new_game', e.currentTarget.id, Session.get('player_id'));
   }
 });
 
+Template.sentChallenge.events({
+  'click button': function(e){
+      Meteor.call('remove_challenge',Session.get('player_id'),e.currentTarget.id  )
+  }
+});
+
+//1417953998469411
 //////
 ////// lobby template: shows everyone not currently playing, and
 ////// offers a button to start a fresh game.
-//////
+//////})
+
+Template.postPick.show = function(){
+  return challenge() && !game();
+}
+
+Template.postPick.events = ({
+  'click button': function(e){
+    var txt = $('#post_input').val();
+
+    $('#submitOpPost').html('waiting for other player').prop('disabled', true);
+    $('#post_input').prop("disabled", true);
+
+    var c = Challenges.findOne({_id:Session.get('challenge_id')});
+    //Challenges.remove(c._id);
+
+    pid = Session.get('player_id');
+    
+    console.log(pid + " " + c.sent + " " + c.received);
+
+    if(pid == c.sent){
+      Players.update({_id:c.received},{$set:{message:txt}});
+      Challenges.update({_id:Session.get("challenge_id")},{$set:{sentDone:true}});
+      c.sentDone = true;
+    }else{
+      Players.update({_id:c.sent},{$set:{message:txt}});
+      Challenges.update({_id:Session.get("challenge_id")},{$set:{receiveDone:true}});
+    }
+
+    var c = Challenges.findOne({_id:Session.get('challenge_id')});
+    console.log(c.sentDone + ' ' + c.receiveDone);
+
+    if(c.sentDone && c.receiveDone){
+      Meteor.call('remove_challenge',c.sent, c.received );
+      Session.set("challenge_id", null);
+      Meteor.call('start_new_game', c.sent, c.received);
+    }
+
+  }
+});
+
+
+
+
+Template.lobby.has_challenges = function () {
+  var p = Challenges.find({received:Session.get('player_id')});
+  //console.log('has_challenges  ' + p);
+  return p.count() != 0;
+
+}
+
+Template.lobby.challenger = function(){
+    var ps = [];
+    var p = Challenges.find({received:Session.get('player_id')}).forEach(function(a){
+      var x = Players.findOne({_id: a.sent});
+      ps.push(x);
+    });
+    console.log(ps);
+    return ps;
+}
+
+
+Template.lobby.has_sent_challenges = function(){
+  var p = Challenges.find({sent:Session.get('player_id')});
+  //console.log('has_challenges  ' + p);
+  return p.count() != 0;
+}
+
+Template.lobby.sent_challenger = function(){
+    var ps = [];
+    var p = Challenges.find({sent:Session.get('player_id')}).forEach(function(a){
+      var x = Players.findOne({_id: a.received});
+      ps.push(x);
+    });
+    console.log(ps);
+    return ps;
+}
 
 Template.lobby.show = function() {
   // only show lobby if we're not in a game
-  return !game();
+  return !game() && !challenge();
 };
 
 Template.lobby.waiting = function() {
+
   var players = Players.find({
     _id: {
-      $ne: Session.get('player_id')
+      $ne:Session.get('player_id')
     },
     name: {
       $ne: ''
     },
-    game_id: null
+    game_id: null,
+    //sent_challenges: {$not: {$elemMatch:Session.get('player_id')}}
   });
 
-  return players;
+  ps =[]
+  players.forEach(function(player){
+    console.log(player);
+    if(Challenges.find({sent:player['_id']}).count() == 0 && Challenges.find({received:player['_id']}).count() == 0){
+      ps.push(player);
+    }
+  });  
+
+  return ps;
 };
 
 Template.lobby.count = function() {
@@ -316,6 +443,8 @@ Meteor.startup(function() {
   // the words in that game.
   Deps.autorun(function() {
     Meteor.subscribe('players');
+    Meteor.subscribe('challenges');
+
 
     if (Session.get('player_id')) {
       var me = player();

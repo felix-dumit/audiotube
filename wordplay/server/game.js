@@ -2,6 +2,11 @@
 
 
 Meteor.methods({
+  
+  remove_challenge: function(s, r){
+      Challenges.remove({sent:s, received:r});
+  },
+
   start_new_game: function (id1, id2) {
     // create a new game w/ fresh board
     var game_id = Games.insert({board: new_board(),

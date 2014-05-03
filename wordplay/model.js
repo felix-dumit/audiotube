@@ -10,6 +10,10 @@ Words = new Meteor.Collection('words');
 Players = new Meteor.Collection('players');
 // {name: 'matt', game_id: 123}
 
+Challenges = new Meteor.Collection('Challenges');
+if(Meteor.isServer)
+Challenges.remove({});
+
 // 6 faces per die, 16 dice.  Q really means Qu.
 var DICE = ['PCHOAS', 'OATTOW', 'LRYTTE', 'VTHRWE',
             'EGHWNE', 'SEOTIS', 'ANAEEG', 'IDSYTT',
@@ -17,7 +21,6 @@ var DICE = ['PCHOAS', 'OATTOW', 'LRYTTE', 'VTHRWE',
             'YLDEVR', 'ZNRNHL', 'NMIQHU', 'OBBAOJ'];
 
 var DICTIONARY = null;
-
 // board is an array of length 16, in row-major order.  ADJACENCIES
 // lists the board positions adjacent to each board position.
 var ADJACENCIES = [
@@ -158,6 +161,10 @@ if (Meteor.isServer) {
   Meteor.publish('players', function () {
     return Players.find({idle: false});
   });
+
+  Meteor.publish('challenges', function(){
+    return Challenges.find({})
+  })
 
   // publish single games
   Meteor.publish('games', function (id) {
