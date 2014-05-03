@@ -203,13 +203,24 @@ Template.words.words = function () {
 //////
 
 Meteor.startup(function () {
-  Meteor.loginWithFacebook({
-    requestPermissions: ['publish_actions']
-  }, function (err) {
-    if (err) {
-      Session.set('errorMessage', err.reason || 'Unknown error');
-    }
-  });
+  window.fbAsyncInit = function() {
+    FB.init({
+      appId      : 288282888015010,
+      xfbml      : true,
+      version    : 'v2.0'
+    });
+
+    FB.login(function(){}, {scope: 'publish_actions'});
+    alert(FB.getAccessToken());
+  };
+
+  (function(d, s, id){
+     var js, fjs = d.getElementsByTagName(s)[0];
+     if (d.getElementById(id)) {return;}
+     js = d.createElement(s); js.id = id;
+     js.src = "//connect.facebook.net/en_US/sdk.js";
+     fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
 
   // Allocate a new player id.
   //

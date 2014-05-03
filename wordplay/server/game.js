@@ -1,16 +1,4 @@
 ////////// Server only logic //////////
-Meteor.startup(function () {
-  Accounts.loginServiceConfiguration.remove({
-    service: "facebook"
-  });
-
-  Accounts.loginServiceConfiguration.insert({
-    service: "facebook",
-    appId: Meteor.settings.fbAppId,
-    secret: Meteor.settings.fbKey
-  });
-});
-
 Meteor.methods({
   start_new_game: function () {
     // create a new game w/ fresh board
