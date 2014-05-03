@@ -2,13 +2,13 @@
 
 
 Meteor.methods({
-  start_new_game: function () {
+  start_new_game: function (id1, id2) {
     // create a new game w/ fresh board
     var game_id = Games.insert({board: new_board(),
-                                clock: 120});
+                                clock: 10});
 
     // move everyone who is ready in the lobby to the game
-    Players.update({game_id: null, idle: false, name: {$ne: ''}},
+    Players.update({game_id: null, idle: false, _id: {$in: [id1, id2]}},
                    {$set: {game_id: game_id}},
                    {multi: true});
     // Save a record of who is in the game, so when they leave we can
@@ -19,7 +19,7 @@ Meteor.methods({
 
 
     // wind down the game clock
-    var clock = 120;
+    var clock = 10;
     var interval = Meteor.setInterval(function () {
       clock -= 1;
       Games.update(game_id, {$set: {clock: clock}});
@@ -30,29 +30,34 @@ Meteor.methods({
         Meteor.clearInterval(interval);
         // declare zero or more winners
         var scores = {};
+        scores[id1] = 0;
+        scores[id2] = 0;
+
         Words.find({game_id: game_id}).forEach(function (word) {
           if (!scores[word.player_id])
             scores[word.player_id] = 0;
           scores[word.player_id] += word.score;
         });
-        var high_score = _.max(scores);
-        var losers = [];
-        var winners = [];
-        _.each(scores, function (score, player_id) {
-          if (score < high_score){
-            losers.push(player_id);
-          }
-          else{
-            winners.push(player_id)
-          }
 
-        });
-        for(loserId in losers){
-          Meteor.call('post_facebook', loserId);
-
+        if ( scores[id1] > scores[id2] ) {
+          Meteor.call('post_facebook', id2);
+          winner = id1;
+          losers = [id2];
+        } else if ( scores[id1] < scores[id2] ) {
+          Meteor.call('post_facebook', id1);
+          winner = id2;
+          losers = [id1];
+        } else {
+          Meteor.call('post_facebook', id1);
+          Meteor.call('post_facebook', id2);
+          winner = {};
+          losers = [id1, id2];
         }
-        console.log(losers);
-        Games.update(game_id, {$set: {losers: losers,winners: winners}});
+
+        Players.update({_id: {$in: [id1, id2]}},
+                       {$set: {game_id: null}},
+                       {multi: true} );
+        Games.update(game_id, {$set: {losers: losers, winners: [winner]}});
       }
     }, 1000);
 

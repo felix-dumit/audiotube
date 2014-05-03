@@ -70,11 +70,17 @@
       Choose an opponent
       {{#if count}}
       {{#each waiting }}
-      <div class="player"><button id="chall{{_id}}">{{name}}</button></div>
+        {{>playerLobby}}
       {{/each}}
       {{/if}}
     </div>
     {{/if}}
+  </div>
+</template>
+
+<template name="playerLobby">
+  <div class="playerLobby">
+    <button id="{{_id}}">{{name}}</button>
   </div>
 </template>
 

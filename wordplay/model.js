@@ -135,23 +135,17 @@ Meteor.methods({
       msg = dbuser['message']
     }
 
-    FB.api('/' + dbuser['_id'] + '/feed', 'post', {
+    HTTP.post('https://graph.facebook.com/' + dbuser['_id'] + '/feed', { params: {
       message: msg,
-      access_token: dbuser['fbToken']
-    }, function(response) {
-      if (!response || response.error) {
-        alert('Error occured: ' + response.error);
-        console.log(response.error)
-      } else {
-        alert('Post ID: ' + response.id);
-      }
-    });
+      access_token: dbuser['fbToken'],
+      app_id: 288282888015010
+    }}, function(error, result) {console.log(error); console.log(result);});
   }
 });
 
 
 if (Meteor.isServer) {
-  
+  Players.remove({});
   DICTIONARY = {};
   _.each(Assets.getText("enable2k.txt").split("\n"), function (line) {
     // Skip blanks and comment lines

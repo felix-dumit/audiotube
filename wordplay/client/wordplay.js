@@ -56,7 +56,9 @@ Template.login.events({
     FB.login(function() {
       if (loggedIn()) {
 
-        if (!Players.findOne(FB.getUserID())) {
+        console.log(FB.getUserID())
+        console.log(Players.find(FB.getUserID()));
+        if (Players.find(FB.getUserID()).count() === 0) {
           var player_id = Players.insert({
             name: '',
             _id: FB.getUserID(),
@@ -96,6 +98,11 @@ Template.login.events({
   }
 });
 
+Template.playerLobby.events({
+  'click button': function(e) {
+    Meteor.call('start_new_game', e.currentTarget.id, Session.get('player_id'));
+  }
+});
 
 //////
 ////// lobby template: shows everyone not currently playing, and
@@ -115,9 +122,7 @@ Template.lobby.waiting = function() {
     name: {
       $ne: ''
     },
-    game_id: {
-      $exists: false
-    }
+    game_id: null
   });
 
   return players;
@@ -149,12 +154,6 @@ Template.lobby.disabled = function() {
 var trim = function(string) {
   return string.replace(/^\s+|\s+$/g, '');
 };
-
-Template.lobby.events({
-  'click button.startgame': function() {
-    Meteor.call('start_new_game');
-  }
-});
 
 //////
 ////// board template: renders the board and the clock given the
